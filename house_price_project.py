@@ -367,13 +367,28 @@ pd.Series(lasso_coef, index=x.columns)[lasso_coef != 0]
 
 # 데이터 재로드
 import pandas as pd
+import numpy as np
 
 
+
+df = pd.read_csv("./plotly_data/ames.csv")
 # 사용자가 제시한 변수 목록 정리
 target_columns = [
+    # 품질/상태 관련
     'OverallQual', 'OverallCond', 'RoofStyle', 'ExterQual', 'ExterCond',
-    'Exterior1st', 'HeatingQC', 'GarageCond', 'BsmtCond', 'PavedDrive',
-    'YearBuilt', 'YearRemodAdd', 'BsmtQual', 'GarageYrBlt',
+    'Exterior1st', 'HeatingQC', 'GarageCond', 'BsmtCond', 'BsmtQual',
+    'KitchenQual', 'GarageQual', 'Foundation', 'PavedDrive',
+    
+    # 연도 관련
+    'YearBuilt', 'YearRemodAdd', 'GarageYrBlt',
+    
+    # 욕실 관련
+    'FullBath', 'HalfBath', 'BsmtFullBath', 'BsmtHalfBath',
+    
+    # 면적 관련
+    'GrLivArea', 'TotalBsmtSF', 'GarageArea', 'WoodDeckSF',
+    
+    # 위치 관련
     'TotRmsAbvGrd', 'Latitude', 'Longitude', 'SalePrice'
 ]
 
@@ -388,6 +403,7 @@ df = df.dropna(subset=['Latitude', 'Longitude'])
 df['GarageCond'] = df['GarageCond'].fillna("None")
 df['BsmtCond'] = df['BsmtCond'].fillna("None")
 df['BsmtQual'] = df['BsmtQual'].fillna("None")
+df['GarageQual'] = df['GarageQual'].fillna("None")
 
 # 2. 수치형 결측치: 차고 건축연도 → 차고 없음이면 0으로
 df['GarageYrBlt'] = df['GarageYrBlt'].fillna(0)
@@ -396,3 +412,28 @@ df = df.drop(columns=['PID'])
 
 df.isna().sum()
 df = df[target_columns]
+
+
+
+# 5️. 범주형 변수 → 수치형 변환 (Ordinal Encoding)
+# 범주형 변수 수치화 (Ordinal Encoding)
+ordinal_mappings = {
+    'ExterQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'ExterCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'HeatingQC': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'GarageCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+}
+
+# 매핑 적용
+for col, mapping in ordinal_mappings.items():
+    df[col] = df[col].map(mapping)
+
+df = pd.get_dummies(df, columns=['RoofStyle', 'Exterior1st', 'PavedDrive'], drop_first=True)
+
+# 6️. 결측치 확인
+print(df.isnull().sum())
+
+
+

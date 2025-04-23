@@ -1,0 +1,76 @@
+---
+title: "5조 Ames Project"
+format:
+    dashboard:
+        logo: logo.png
+---
+
+
+# Page 1
+
+https://orchard.com/blog/posts/most-expensive-home-repairs?utm_source=chatgpt.com
+https://point.com/blog/10-most-expensive-home-repairs?utm_source=chatgpt.com
+https://osbornehomes.com/top-16-most-expensive-home-repairs/?utm_source=chatgpt.com
+
+## Row
+```{python}
+#| content: valuebox
+#| title: "Articles per day"
+#| icon: pencil
+#| color: primary
+dict(value = 10)
+```
+```{python}
+#| content: valuebox
+#| title: "Comments per day"
+dict(
+icon = "chat",
+color = "primary",
+value = 20)
+```
+```{python}
+#| content: valuebox
+#| title: "Spam per day"
+dict(
+icon = "trash",
+color = "danger",
+value = 30)
+```
+
+
+# Page 2
+
+
+## Row {height="70%"}
+
+```{python}
+a = 1
+print(a)
+```
+
+
+
+
+## Row {height="30%"}
+
+
+
+### Column
+```{python}
+b = 1
+print(b)
+```
+
+
+
+### Column {.tabset}
+
+```{python}
+c = 1
+print(c)
+```
+
+
+```{python}
+print(2)
+```
