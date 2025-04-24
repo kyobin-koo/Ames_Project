@@ -1,4 +1,25 @@
+<<<<<<< HEAD
 # jisuhan
+=======
+jisuhan
+jaewonpark
+
+import numpy as np
+import pandas as pd
+
+# new
+
+df = pd.read_csv('./train.csv')
+# df = pd.read_csv('./test.csv')
+# df = pd.read_csv('./sample_submission.csv')
+
+
+df["SalePrice"]
+df["OverallQual"]
+df["OverallCond"]
+
+
+>>>>>>> e7b63ea77d1ef1d140a769648bdbb52f82ce7868
 
 
 
