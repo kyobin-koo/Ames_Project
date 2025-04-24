@@ -3,74 +3,1082 @@ title: "5조 Ames Project"
 format:
     dashboard:
         logo: logo.png
+        # css: styles.css
+        page-layout: dashboard
 ---
 
 
-# Page 1
-
-https://orchard.com/blog/posts/most-expensive-home-repairs?utm_source=chatgpt.com
-https://point.com/blog/10-most-expensive-home-repairs?utm_source=chatgpt.com
-https://osbornehomes.com/top-16-most-expensive-home-repairs/?utm_source=chatgpt.com
+# 목적
 
 ## Row
+
+### {.tabset}
+
+
+#### 💡 미국 집 매매 예산안
+
+- 미국 Ames에 집 매매 예산안 구성
+    - 주택 가격 <br>
+    - 클로징 비용 : 바이어와 셀러가 지불하는 비용 <br>
+    - 유지 및 관리 비용 : 구매한 후에 들어가는 유지 및 관리 비용 <br>
+
+
+#### 💡 미국의 집값은
+
+![](./homerepair.PNG){width=500px}
+<br>
+<br>
+- **미국 연간 유지비용**에 대한 권장사항은 주택 원래 가격의 1.5% ~ 4%까지 다양함.<br>
+ex) 70만 달러에 주택을 구매한다면 연간 10,500~28,000 달러를 유지비로 지출<br>
+
+
+#### 💡 목적
+
+📍 유지 및 관리 비용 ⬇  매매 가격 ⬇ 집을 찾아보자!
+<br>
+<br>
+👀 " 저렴한 집값만 보고 샀다가 유지비 폭탄?"
+<br>
+<br>
+프로젝트 목적 : 지금 당장 드러나는 가격뿐 아니라, 장기적인 유지 비용까지 고려한 ‘진짜 합리적인 집 구매’를 꿈꾸는 사람들을 위한 Ames 부동산 분석 프로젝트
+
+
+
+    
+## Row 
+
 ```{python}
 #| content: valuebox
-#| title: "Articles per day"
-#| icon: pencil
+#| title: "품질 / 상태"
+#| icon: wrench
 #| color: primary
-dict(value = 10)
+dict(
+    value = (14)
+)
+
+```
+
+```{python}
+#| content: valuebox
+#| title: "면적"
+#| color: primary
+dict(
+icon = "aspect-ratio",
+
+value = (5))
 ```
 ```{python}
 #| content: valuebox
-#| title: "Comments per day"
+#| title: "욕실"
+#| color: primary
 dict(
-icon = "chat",
-color = "primary",
-value = 20)
+icon = "droplet",
+
+value = 4)
 ```
+
 ```{python}
 #| content: valuebox
-#| title: "Spam per day"
+#| title: "연도"
+#| color: primary
 dict(
-icon = "trash",
-color = "danger",
-value = 30)
+icon = "calendar",
+
+value = 3)
 ```
 
+## Row
 
-# Page 2
+
+### 품질 / 상태
+- `OverallQual`  
+- `OverallCond`  
+- `RoofStyle`  
+- `ExterQual`  
+- `ExterCond`  
+- `Exterior1st`  
+- `HeatingQC`  
+- `GarageCond`  
+- `BsmtCond`  
+- `BsmtQual`  
+- `KitchenQual`  
+- `GarageQual`  
+- `Foundation`  
+- `PavedDrive`
 
 
-## Row {height="70%"}
+### 면적 관련
+- `GrLivArea`  
+- `TotalBsmtSF`  
+- `GarageArea`  
+- `WoodDeckSF`  
+- `TotRmsAbvGrd`
+
+### 욕실 관련
+- `FullBath`  
+- `HalfBath`  
+- `BsmtFullBath`  
+- `BsmtHalfBath`
+
+### 연도 관련
+- `YearBuilt`  
+- `YearRemodAdd`  
+- `GarageYrBlt`
 
 ```{python}
-a = 1
-print(a)
+#| echo: true
+#| include: false
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("./plotly_data/ames.csv")
+
+# 사용자가 제시한 변수 목록 정리
+target_columns = [
+    # 품질/상태 관련
+    'OverallQual', 'OverallCond', 'RoofStyle', 'ExterQual', 'ExterCond',
+    'Exterior1st', 'HeatingQC', 'GarageCond', 'BsmtCond', 'BsmtQual',
+    'KitchenQual', 'GarageQual', 'Foundation', 'PavedDrive',
+    
+    # 연도 관련
+    'YearBuilt', 'YearRemodAdd', 'GarageYrBlt',
+    
+    # 욕실 관련
+    'FullBath', 'HalfBath', 'BsmtFullBath', 'BsmtHalfBath',
+    
+    # 면적 관련
+    'GrLivArea', 'TotalBsmtSF', 'GarageArea', 'WoodDeckSF',
+    
+    # 위치 관련
+    'TotRmsAbvGrd', 'Latitude', 'Longitude', 'SalePrice'
+]
+
+# 결측치 개수 확인
+missing_info = df[target_columns].isnull().sum()
+missing_info = missing_info[missing_info > 0]
+missing_info
+df = df.dropna(subset=['Latitude', 'Longitude'])
+
+
+
+# 4. 결측치 처리 
+# 4-1. 카테고리형 결측치: 지하실/차고가 없는 경우 "None" 처리
+df['GarageCond'] = df['GarageCond'].fillna("None")
+df['BsmtCond'] = df['BsmtCond'].fillna("None")
+df['BsmtQual'] = df['BsmtQual'].fillna("None")
+df['GarageQual'] = df['BsmtQual'].fillna("None")
+
+# 4-2. 수치형 결측치: 차고 건축연도 → 차고 없음이면 0으로
+df['GarageYrBlt'] = df['GarageYrBlt'].fillna(0)
+
+df['BsmtFullBath'] = df['BsmtFullBath'].fillna(0)
+df['BsmtHalfBath'] = df['BsmtHalfBath'].fillna(0)
+df['TotalBsmtSF'] = df['TotalBsmtSF'].fillna(0)
+df['GarageArea'] = df['GarageArea'].fillna(0)
+df = df.drop(columns=['PID'])
+
+
+df = df[target_columns]
+
+# 5. 범주형 변수 처리하기
+# 5️-1. 범주형 변수 → 수치형 변환 (Ordinal Encoding)
+# 범주형 변수 수치화 (Ordinal Encoding)
+ordinal_mappings = {
+    'ExterQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'ExterCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'HeatingQC': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'GarageCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'KitchenQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'GarageQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+}
+
+# 매핑 적용
+for col, mapping in ordinal_mappings.items():
+    df[col] = df[col].map(mapping)
+
+df = pd.get_dummies(df, columns=['RoofStyle', 'Exterior1st', 'Foundation', 'PavedDrive'], drop_first=True)
+
+
+# 6️. 결측치 확인
+print(df.isnull().sum())
+
+
+# LassoCV (변수 39개)
+import pandas as pd
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import StandardScaler
+
+# 독립변수(X), 종속변수(y) 분리
+X = df.drop(columns=['SalePrice'])
+y = df['SalePrice']
+
+# 1. 스케일링 (표준화)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # X를 평균 0, 표준편차 1로 변환
+
+# 2️. LassoCV 학습 (교차검증으로 alpha 찾기)
+lasso = LassoCV(cv=5, random_state=2025)
+lasso.fit(X_scaled, y)
+
+# 3. 결과 확인
+best_alpha = lasso.alpha_
+coefficients = lasso.coef_
+
+# 4. 계수와 변수명을 데이터프레임으로 정리
+coef_df = pd.DataFrame({
+    'Feature': X.columns,
+    'Coefficient': coefficients
+}).sort_values(by='Coefficient', key=abs, ascending=False)
+
+print(f"Best alpha: {best_alpha}")
+print(coef_df)
+
+
+X.columns
+
 ```
 
 
 
+# 변수 선택
 
-## Row {height="30%"}
+### {.tabset}
 
+#### EDA 데이터 
 
+::: {.columns}
 
-### Column
+::: {.column width="50%"}
+
 ```{python}
-b = 1
-print(b)
+#| echo: False
+#| include: true
+
+
+features = X.columns.tolist()
+
+# 평균 SalePrice by YearBuilt 그래프
+ax = df.groupby("YearBuilt")["SalePrice"].mean().plot(
+    kind="line", figsize=(10, 4), marker="o", color="royalblue"
+)
+
+ax.set_title("Average Sale Price by Year Built")
+ax.set_xlabel("Year Built")
+ax.set_ylabel("Average Sale Price")
+ax.grid(True)
+plt.tight_layout()
+plt.show()
+
 ```
 
+:::
 
-
-### Column {.tabset}
+::: {.column width="50%"}
 
 ```{python}
-c = 1
-print(c)
+#| echo: False
+#| include: true
+#### EDA   연식과 가격을 통한 지도 시각화 2
+
+import plotly.express as px
+
+fig = px.scatter_mapbox(
+    df,
+    lat="Latitude",
+    lon="Longitude",
+    color="YearBuilt",           # 색상으로 연식 표현
+    size="SalePrice",            # 크기로 가격 표현
+    color_continuous_scale="Blues",
+    size_max=15,
+    zoom=11,
+    mapbox_style="carto-positron",
+    hover_data=["SalePrice", "YearBuilt", "GrLivArea", "OverallQual"]
+)
+
+fig.update_layout(
+    title="Housing Age & Price on Map",
+    width=950,
+    height=600,
+    margin={"r":0,"t":40,"l":0,"b":0}
+)
+
+fig.show()
+
+
+
 ```
+
+:::
+
+:::
+
+#### 데이터 전처리 및 결측치 처리
+
+
+::: {.columns}
+
+::: {.column width="50%"}
+
+
+- 지하실 및 차고가 없는 경우는 `'None'`으로 채운 후, Ordinal Encoding을 통해 수치화함.
+- 차고 건축 연도(GarageYrBlt), 지하실 욕실 등 일부 수치형 결측치는 `0`으로 처리함.
+- 최종적으로 37개 주요 변수 추출함.
+
+- 감성적 특성과 관계된 30여 개 변수 선정  
+- 품질/상태, 면적, 위치, 연도, 욕실 수 등 포함  
+- 종속변수는 `SalePrice` 사용
+- `GarageCond`, `BsmtCond`, `BsmtQual`, `GarageQual` 등  
+  → 결측 = 해당 항목 없음 → `"None"`으로 처리
+- `GarageYrBlt`, `BsmtFullBath`, `BsmtHalfBath`, `TotalBsmtSF`, `GarageArea`  
+  → 결측 = 구조물 없음 → `0`으로 대체
+
+- 1. 범주형 변수 수치화
+- Ordinal Encoding
+- 품질/상태 관련: `"None"=0`, `"Po"=1` ~ `"Ex"=5`  
+- 대상 변수: `ExterQual`, `HeatingQC`, `KitchenQual`, 등
+- `RoofStyle`, `Exterior1st`, `Foundation`, `PavedDrive`  
+  → `pd.get_dummies`로 처리 (기준값 제외)
+
+:::
+
+::: {.column width="50%"}
+
+```{python}
+from sklearn.linear_model import Lasso
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# 계수가 0이 아닌 변수만 선택
+selected_coef_df = coef_df[coef_df['Coefficient'] != 0].copy()
+
+# 절대값 기준 정렬
+selected_coef_df = selected_coef_df.sort_values(by='Coefficient', key=abs, ascending=True)
+
+# 시각화
+plt.figure(figsize=(12, 10))
+plt.barh(selected_coef_df['Feature'], selected_coef_df['Coefficient'])
+plt.xlabel('Coefficient Value')
+plt.title('LassoCV - Selected Feature Coefficients')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+```
+
+
+:::
+
+:::
+
+
+
+
+#### 변수 선정 방법
+-   1. **LassoCV 기반 변수 선택**
+    - 다중공선성을 고려하여 **LassoCV (5-Fold Cross Validation)** 를 적용.
+    - 최적의 alpha(209)를 기준으로 변수 축소.
+<br>
+<br>
+
+-   2. **상관계수 절대값 기반 변수 선택**
+    - 절대값을 기준으로 상위 10개인 상관계수 변수 선택.
+    
 
 
 ```{python}
-print(2)
+#| echo: true
+#| include: false
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import statsmodels.formula.api as smf
+import seaborn as sns
+from statsmodels.api import OLS
+from statsmodels.formula.api import ols
+import statsmodels.api as sm
+
+
+
+
+df = pd.read_csv("./plotly_data/ames.csv")
+# 사용자가 제시한 변수 목록 정리
+target_columns = [
+    # 품질/상태 관련
+    'OverallQual', 'OverallCond', 'RoofStyle', 'ExterQual', 'ExterCond',
+    'Exterior1st', 'HeatingQC', 'GarageCond', 'BsmtCond', 'BsmtQual',
+    'KitchenQual', 'GarageQual', 'Foundation', 'PavedDrive',
+    
+    # 연도 관련
+    'YearBuilt', 'YearRemodAdd', 'GarageYrBlt',
+    
+    # 욕실 관련
+    'FullBath', 'HalfBath', 'BsmtFullBath', 'BsmtHalfBath',
+    
+    # 면적 관련
+    'GrLivArea', 'TotalBsmtSF', 'GarageArea', 'WoodDeckSF',
+    
+    # 위치 관련
+    'TotRmsAbvGrd', 'Latitude', 'Longitude', 'SalePrice'
+]
+
+# 결측치 개수 확인
+missing_info = df[target_columns].isnull().sum()
+missing_info = missing_info[missing_info > 0]
+missing_info
+df = df.dropna(subset=['Latitude', 'Longitude'])
+
+
+
+# 4. 결측치 처리 
+# 4-1. 카테고리형 결측치: 지하실/차고가 없는 경우 "None" 처리
+df['GarageCond'] = df['GarageCond'].fillna("None")
+df['BsmtCond'] = df['BsmtCond'].fillna("None")
+df['BsmtQual'] = df['BsmtQual'].fillna("None")
+df['GarageQual'] = df['BsmtQual'].fillna("None")
+
+# 4-2. 수치형 결측치: 차고 건축연도 → 차고 없음이면 0으로
+df['GarageYrBlt'] = df['GarageYrBlt'].fillna(0)
+
+df['BsmtFullBath'] = df['BsmtFullBath'].fillna(0)
+df['BsmtHalfBath'] = df['BsmtHalfBath'].fillna(0)
+df['TotalBsmtSF'] = df['TotalBsmtSF'].fillna(0)
+df['GarageArea'] = df['GarageArea'].fillna(0)
+df = df.drop(columns=['PID'])
+
+
+df = df[target_columns]
+
+# 5. 범주형 변수 처리하기
+# 5️-1. 범주형 변수 → 수치형 변환 (Ordinal Encoding)
+# 범주형 변수 수치화 (Ordinal Encoding)
+ordinal_mappings = {
+    'ExterQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'ExterCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'HeatingQC': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'GarageCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtCond': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'BsmtQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'KitchenQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+    'GarageQual': {'None': 0, 'Po': 1, 'Fa': 2, 'TA': 3, 'Gd': 4, 'Ex': 5},
+}
+
+# 매핑 적용
+for col, mapping in ordinal_mappings.items():
+    df[col] = df[col].map(mapping)
+
+df = pd.get_dummies(df, columns=['RoofStyle', 'Exterior1st', 'Foundation', 'PavedDrive'], drop_first=True)
+
+
+# 6️. 결측치 확인
+print(df.isnull().sum())
+
+
+# LassoCV (변수 39개)
+import pandas as pd
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import StandardScaler
+
+# 독립변수(X), 종속변수(y) 분리
+X = df.drop(columns=['SalePrice'])
+y = df['SalePrice']
+
+# 1. 스케일링 (표준화)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # X를 평균 0, 표준편차 1로 변환
+
+# 2️. LassoCV 학습 (교차검증으로 alpha 찾기)
+lasso = LassoCV(cv=5, random_state=2025)
+lasso.fit(X_scaled, y)
+
+# 3. 결과 확인
+best_alpha = lasso.alpha_
+coefficients = lasso.coef_
+
+# 4. 계수와 변수명을 데이터프레임으로 정리
+coef_df = pd.DataFrame({
+    'Feature': X.columns,
+    'Coefficient': coefficients
+}).sort_values(by='Coefficient', key=abs, ascending=False)
+
+print(f"Best alpha: {best_alpha}")
+print(coef_df)
+
+
+
+# Lasso alpha
+from sklearn.linear_model import Lasso
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
+# 기준 alpha (LassoCV에서 나온 값)
+base_alpha = lasso.alpha_
+
+# 실험할 alpha 배수들
+alpha_multipliers = [0.5, 1, 2, 5, 10, 15, 20, 25]
+results = []
+
+# 반복해서 모델 돌리기
+for m in alpha_multipliers:
+    alpha = base_alpha * m
+    model = Lasso(alpha=alpha, max_iter=10000)
+    model.fit(X_scaled, y)
+    coef = model.coef_
+    num_nonzero = np.sum(coef != 0)
+    y_pred = model.predict(X_scaled)
+    mse = mean_squared_error(y, y_pred)
+
+    results.append({
+        'alpha': round(alpha, 5),
+        'multiplier': m,
+        'num_features': num_nonzero,
+        'mse': round(mse, 2)
+    })
+
+    # 남아 있는 변수 출력
+    print(f"\n[alpha = {alpha:.5f}]")
+    print(f"남은 변수 개수: {num_nonzero}")
+    print("선택된 변수:")
+    print(pd.Series(X.columns[coef != 0]).values)
+
+# 결과 DataFrame으로 정리
+results_df = pd.DataFrame(results)
+print("\n📊 Alpha별 결과:")
+print(results_df)
 ```
+
+```{python}
+import matplotlib.pyplot as plt
+
+# 그래프로 보기
+plt.figure(figsize=(10, 5))
+plt.plot(results_df['alpha'], results_df['num_features'], marker='o', label='Selected Features')
+plt.xlabel('Alpha')
+plt.ylabel('Number of Selected Features')
+plt.title('Alpha 값에 따른 변수 선택 개수 변화')
+plt.grid(True)
+plt.legend()
+plt.show()
+```
+
+#### 최종 변수
+
+
+| 모델     | Adj. R-squared | AIC     |
+|----------|----------------|---------|
+| Model 1  | 0.852          | 58050   |
+| Model 2  | 0.853          | 58030   |
+
+- 최종 변수
+    'GrLivArea', 'TotalBsmtSF', 'GarageArea', 
+    'OverallQual', 'KitchenQual', 'BsmtQual', 'ExterQual', 
+    'OverallCond', 'BsmtFullBath',
+    'YearBuilt' 
+
+
+```{python}
+#| echo: false
+#| include: false
+
+from sklearn.linear_model import LassoCV
+lasso = LassoCV(cv=5).fit(X_scaled, y)
+top_features = coef_df[coef_df["Coefficient"] != 0]['Feature'].head(10).tolist()
+```
+
+```{python}
+#| echo: false
+#| include: false
+from sklearn.model_selection import GridSearchCV, KFold
+
+# alpha로 찾기
+selected_features = ['OverallQual', 'ExterQual', 'KitchenQual' ,'YearBuilt', 'BsmtFullBath',
+'GrLivArea', 'TotalBsmtSF' ,'GarageArea' ,'WoodDeckSF','RoofStyle_Hip' ]
+
+# 절대값으로 10개 찾기
+# 1. 종속변수 로그 변환
+y = (df['SalePrice'])  # log(1 + y)
+
+# 2. 상위 10개 피처 선택 (기존 coef_df 기준)
+top_features = coef_df[coef_df["Coefficient"] != 0]['Feature'].head(10).tolist()
+X = df[top_features]
+
+# 3. 스케일링
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 4. Lasso + GridSearchCV 설정
+lasso = Lasso(max_iter=10000)
+alphas = np.linspace(0.01, 1, 100)
+cv = KFold(n_splits=5, shuffle=True, random_state=2025)
+grid = GridSearchCV(estimator=lasso, param_grid={'alpha': alphas},
+                    cv=cv, scoring='neg_mean_squared_error')
+grid.fit(X_scaled, y)
+```
+
+```{python}
+# 5. 최적 alpha 및 성능 확인
+print("Best alpha:", grid.best_params_['alpha'])
+print("Best CV Score (MSE):", -grid.best_score_)
+
+# 6. 회귀 계수 출력
+coef_df_top = pd.DataFrame({
+    'Feature': top_features,
+    'Coefficient': grid.best_estimator_.coef_}).sort_values(by='Coefficient', key=abs, ascending=False)
+
+print(coef_df_top)
+```
+
+
+
+# 유지보수 점수화 과정
+
+### 
+📌 **점수화 과정**
+
+✔️ 10개 선정된 변수들 사이에서 이상치 체크<br>
+✔️ MinMaxScaler 적용하기<br>
+✔️ 면적, 품질, 상태, 연식 score로 만들기<br>
+✔️ score 별 가중치 곱하고 합산 진행<br>
+✔️ 가중치 컬럼(MaintenanceScore)을 만들기<br>
+
+
+
+### 유지보수 점수화 계산 단계 {.tabset}
+
+
+#### 📌 Step 1
+
+- 선정한 10개 변수들 사이 이상치를 확인<br>
+- **GrLivArea**, **GarageArea**, **TotalBsmtSF**에서 이상치 제거<br>
+
+```{python}
+#| echo: False
+#| include: true
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 이상치 시각화
+fig = plt.figure(figsize=(16, 12))
+for i, col in enumerate(top_features):
+    ax = fig.add_subplot(4, 3, i + 1)
+    sns.scatterplot(data=df, x=col, y='SalePrice', s=20, ax=ax)
+    _ = ax.set_xlabel(col)
+    _ = ax.set_ylabel('')
+
+plt.tight_layout()
+plt.show()
+
+# 이상치 조건
+condition = (
+    (df['GrLivArea'] <= 3500) &
+    (df['GarageArea'] <= 1200) &
+    (df['TotalBsmtSF'] <= 2500)
+)
+
+# 이상치 제거
+df_clean = df[condition].copy()
+
+```
+
+#### 📌 Step 2
+
+- **MinMaxScaler**를 적용하기 <br>
+    - 단위가 제각각일 경우 연산이나 거리 기반 계산을 할때 영향을 크게 받는 변수가 왜곡 될 수 있음.<br>
+    - 서로 다른 단위를 갖는 변수들을 동일한 범위(0~1)로 스케일링하여 비교 가능하게 만들기 위해서! <br>
+    - 최소값은 0, 최대값은 1로 맞춰주는 방식
+
+
+#### 📌 Step 3
+
+- 각 변수들을 **면적, 품질, 상태, 연식**으로 구성
+    - area_score(면적) : 'GrLivArea', 'TotalBsmtSF', 'GarageArea'<br>
+    - quality_score(품질) : 'OverallQual', 'KitchenQual', 'BsmtQual', 'ExterQual'<br>
+    - condition_score(상태) : 'OverallCond', 'BsmtFullBath'<br>
+    - year_score(연식) : 'YearBuilt'<br>
+<br>
+<br>
+- 각 score를 아래와 같이 계산<br>
+    - area_score = df_clean['GrLivArea'] + df_clean['TotalBsmtSF'] + df_clean['GarageArea']<br>
+    - quality_score = (1 - df_clean['OverallQual']) + (1 - df_clean['KitchenQual']) + (1 - df_clean['BsmtQual']) + (1 - df_clean['ExterQual'])<br>
+    - condition_score = (1 - df_clean['OverallCond']) + (1 - df_clean['BsmtFullBath'])<br>
+    - year_score = 1 - df_clean['YearBuilt']<br>
+
+#### 📌 Step 4
+- **quality_score** 와 **year_score**에 조금 더 비중을 둬서 가중치 진행<br>
+<br>
+<br>
+
+- 가중치를 둬서 계산 진행
+    - df['MaintenanceScore'] = area_score * 0.2 + quality_score * 0.3 + condition_score * 0.2 + year_score * 0.3
+<br>
+<br>
+
+- **MaintenanceScore**을 A(최우수),B(양호),C(개선필요),D(시급)으로 구분
+
+```{python}
+#| echo: True
+#| include: false
+
+
+
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+
+
+# 스케일링할 변수 목록
+scale_columns = [
+    'GrLivArea', 'TotalBsmtSF', 'GarageArea',   # 면적
+    'OverallQual', 'KitchenQual', 'BsmtQual', 'ExterQual',  # 품질
+    'OverallCond', 'BsmtFullBath',  # 상태
+    'YearBuilt'  # 연식
+]
+
+# MinMaxScaler 적용 (0~1 범위)
+scaler = MinMaxScaler()
+df_clean[scale_columns] = scaler.fit_transform(df_clean[scale_columns])
+df_clean = df_clean[scale_columns]
+
+
+# 면적 그대로
+area_score = df_clean['GrLivArea'] + df_clean['TotalBsmtSF'] + df_clean['GarageArea']
+
+# 품질/상태/연식 뒤집기 (1 - 값)
+quality_score = (1 - df_clean['OverallQual']) + (1 - df_clean['KitchenQual']) + (1 - df_clean['BsmtQual']) + (1 - df_clean['ExterQual'])
+condition_score = (1 - df_clean['OverallCond']) + (1 - df_clean['BsmtFullBath'])
+year_score = 1 - df_clean['YearBuilt']  # 연식도 반전
+
+# 가중치 곱하고 합산
+df['MaintenanceScore'] = (
+    area_score * 0.2 +
+    quality_score * 0.3 +
+    condition_score * 0.2 +
+    year_score * 0.3
+)
+```
+
+
+#### 📌 Step 5
+
+- **MaintenanceScore** 높다는 것은 가격대비 유지보수가 높다는 것
+<br> => 해당 집은 피해야하는 집!
+<br>
+
+- **MaintenanceScore** 의 평균과 표준편차를 활용하여 등급을 나누기<br>
+    - **MaintenanceScore** >= mean + std ==> D (시급)
+    - **MaintenanceScore** >= mean       ==> C (개선필요)
+    - **MaintenanceScore** >= mean - std ==> B (양호)
+    - **MaintenanceScore** 그 외         ==> A (최우수)
+
+- 왜? 평균과 표준편차를 활용하는 걸까?
+    - 분포의 중심값(평균)을 기준으로 판단하니, 전체 데이터 비교에 유리
+    - 절대값 기준보다 덜 왜곡됨
+
+```{python}
+#| echo: True
+#| include: false
+
+selected_features = ['OverallQual', 'ExterQual', 'KitchenQual' ,'YearBuilt', 'BsmtFullBath',
+'GrLivArea', 'TotalBsmtSF' ,'GarageArea' ,'WoodDeckSF','RoofStyle_Hip' ]
+
+df_copy = df[condition].copy()
+
+
+
+mean = df['MaintenanceScore'].mean()
+std = df['MaintenanceScore'].std()
+
+
+# 이건 정규분포 또는 비슷한 분포를 가진 점수값들을
+# 상대적으로 나누기 위한 일반적인 전략
+# 점수가 몇 점이 높고 낮은지 명확히 기준을 제시할 수 있어.
+# 분포의 중심값(평균)을 기준으로 판단하니, 전체 데이터 비교에 유리.
+# 절대값 기준보다 덜 왜곡됨, 특히 스케일링된 데이터에서는 더욱!
+
+
+def hybrid_grade(score):
+    if score >= mean + std:
+        return "D (시급)"
+    elif score >= mean:
+        return "C (개선 필요)"
+    elif score >= mean - std:
+        return "B (양호)"
+    else:
+        return "A (최우수)"
+
+df_copy['MaintenanceGrade'] = df['MaintenanceScore'].apply(hybrid_grade)
+
+```
+
+
+
+
+
+<div style="all: unset; font-family: sans-serif; font-size: 16px; color: black; line-height: 1.6;">
+::: {.no-style}
+
+
+
+# 결론 
+
+
+
+
+
+::: {.card title="**등급 구간 별 분포**"}
+
+
+
+
+```{python}
+
+grade_order = ['A (최우수)', 'B (양호)', 'C (개선 필요)', 'D (시급)']
+df_copy['MaintenanceGrade'] = pd.Categorical(df_copy['MaintenanceGrade'],
+                                            categories=grade_order,
+                                            ordered=True)
+                                            
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df_copy, x='MaintenanceScore', y='SalePrice', hue='MaintenanceGrade')
+_ = plt.title("SalePrice vs MaintenanceScore")
+_ = plt.xlabel("Maintenance Score")
+_ = plt.ylabel("Sale Price")
+plt.grid(True)
+plt.show()
+
+```
+
+:::
+
+
+::: {.card title="**A등급 중 가격이 낮은 상위 10개 집**"}
+
+
+```{python}
+
+# 1. D등급만 필터링 + 정렬 (로컬에서 다시 정의)
+df_copy_d = df_copy[df_copy['MaintenanceGrade'] == 'A (최우수)'].copy()
+df_d_sorted = df_copy_d.sort_values(by='SalePrice', ascending=True)
+
+# 2. 상위 10개 선택
+top10_d = df_d_sorted.head(10)
+import plotly.express as px
+
+top10_d[selected_features]
+top10_d = top10_d.reset_index()
+
+# 3. 지도 시각화
+fig = px.scatter_mapbox(
+    top10_d,
+    lat="Latitude",
+    lon="Longitude",
+    color="SalePrice",
+    size="SalePrice",
+    color_continuous_scale="Reds",
+    size_max=15,
+    zoom=11,
+    mapbox_style="carto-positron",
+    hover_data=["SalePrice", "MaintenanceGrade", "YearBuilt", "GrLivArea","index"]
+)
+
+fig.update_layout(
+    title="Top 10 A-Grade Houses (Low Price & Low Maintenance Score)",
+    width=950,
+
+    margin={"r":30,"t":30,"l":0,"b":0}
+)
+
+
+
+```
+
+:::
+
+
+::: {.card title="**등급 별 분포 지도 시각화**"}
+
+
+```{python}
+
+fig = px.scatter_mapbox(
+    df_copy,
+    lat="Latitude",
+    lon="Longitude",
+    color="MaintenanceGrade",  # 등급별 색상 구분
+    category_orders={
+        "MaintenanceGrade": ["A (최우수)", "B (양호)", "C (개선 필요)", "D (시급)"]
+    },
+    mapbox_style="carto-positron",
+    zoom=11,
+    size="SalePrice",  # 혹은 GrLivArea도 가능
+    size_max=12,
+    hover_data=["SalePrice", "MaintenanceGrade", "YearBuilt", "GrLivArea"]
+)
+
+fig.update_layout(
+    title="Maintenance Grade of All Properties in Ames Housing",
+    width=950,
+    margin={"r":30,"t":30,"l":0,"b":0}
+
+)
+
+
+
+```
+
+
+:::
+
+::: {.card title="**지역별 평균 MaintenanceScore**"}
+
+
+
+
+
+
+```{python}
+import seaborn as sns
+
+
+origin_data = pd.read_csv("./plotly_data/ames.csv")
+df_neigh = origin_data[[ 'Neighborhood']]  # 또는 'Id'가 기준이라면 그걸로
+df_copy = df_copy.merge(origin_data[['Neighborhood']], left_index=True, right_index=True)
+
+
+
+pivot = df_copy.pivot_table(index="Neighborhood", values="MaintenanceScore", aggfunc="mean")
+plt.figure(figsize=(8, 10))
+sns.heatmap(pivot.sort_values("MaintenanceScore", ascending=False), cmap="RdYlGn_r", annot=True)
+plt.title("Neighborhood-wise Average Maintenance Score")
+plt.show()
+
+```
+
+:::
+
+::: {.card title="**지역 별 가장 많이 분포된 유지보수 등급 **"}
+
+
+
+
+```{python}
+
+###########################################
+# Neighborhood별 지도 시각화
+
+
+
+
+
+# 1. 등급 비율 계산
+grade_pct = pd.crosstab(df_copy['Neighborhood'], df_copy['MaintenanceGrade'])
+grade_pct = grade_pct.div(grade_pct.sum(axis=1), axis=0) * 100
+
+# 2. 가장 많은 등급 선택
+grade_pct['DominantGrade'] = grade_pct.idxmax(axis=1)
+
+# 3. 좌표 평균
+coords = df_copy.groupby('Neighborhood')[['Latitude', 'Longitude']].mean()
+
+# 4. 병합
+import plotly.express as px
+house_counts = df_copy['Neighborhood'].value_counts().rename("NumHouses")
+# 5. 병합 후 표본 수까지 추가
+neigh_dominant = grade_pct[['DominantGrade']].merge(coords, left_index=True, right_index=True)
+neigh_dominant = neigh_dominant.merge(house_counts, left_on='Neighborhood', right_index=True).reset_index()
+
+fig = px.scatter_mapbox(
+    neigh_dominant,
+    lat="Latitude",
+    lon="Longitude",
+    size="NumHouses", 
+    color="DominantGrade", 
+    color_discrete_sequence=px.colors.qualitative.Set2,
+    category_orders={
+    "DominantGrade": ["A (최우수)", "B (양호)", "C (개선 필요)", "D (시급)"]
+    },
+    mapbox_style="carto-positron",
+    zoom=11,
+    size_max=30,
+    hover_name="Neighborhood",
+    hover_data={"DominantGrade": True, "Latitude": False, "Longitude": False}
+)
+
+fig.update_layout(
+    title=" Dominant Grade by Neighborhood",
+    width=950,
+    margin={"r":30,"t":30,"l":0,"b":0}
+)
+
+
+```
+
+::: 
+
+
+
+
+
+```{python}
+#| echo: false
+#| include: false
+####  게이지 차트 시각화 : 중간 숫자는 평균 가격
+
+# 평균 계산
+species_avg = df_copy.groupby("MaintenanceGrade")["SalePrice"].mean().reindex(
+    ["A (최우수)", "B (양호)", "C (개선 필요)", "D (시급)"]
+)
+
+# 최대값 설정
+max_val = df_copy["SalePrice"].max()
+import plotly.graph_objects as go
+# 그래프 생성
+fig = go.Figure()
+
+for i, (grade, avg_price) in enumerate(species_avg.items()):
+    fig.add_trace(go.Indicator(
+        mode="gauge+number",
+        value=round(avg_price / 1000),  # 천 단위 k로 표시
+        number={"suffix": "k", "font": {"size": 40}},
+        title={'text': f"<b>{grade}</b>", "font": {"size": 18}},
+        domain={'row': i // 2, 'column': i % 2},  # 2행 2열
+        gauge={
+            'axis': {'range': [0, round(max_val / 1000)], 'tickformat': 'k'},
+            'bar': {'color': 'darkblue'},
+            'steps': [
+                {'range': [0, round(max_val * 0.5 / 1000)], 'color': '#d0f0f5'},
+                {'range': [round(max_val * 0.5 / 1000), round(max_val / 1000)], 'color': '#9dddf2'}
+            ],
+        }
+    ))
+
+# 레이아웃 적용
+fig.update_layout(
+    grid={'rows': 2, 'columns': 2, 'pattern': "independent"},
+    title="<b>MaintenanceGrade vs. Average SalePrice</b>",
+    width=1000,
+    font=dict(family="Arial", size=14)
+)
+
+
+```
+
+
+::: {.card title="**등급 별 평균 SalePrice **"}
+
+```{python}
+fig.show()
+```
+
+:::
+
+:::
+
+</div>
+
+

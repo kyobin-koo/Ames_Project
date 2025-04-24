@@ -1,0 +1,12 @@
+/* 전체 페이지가 스크롤되도록 설정 */
+body, .dashboard-page {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  
+  /* 각 박스를 박스 내부 스크롤 대신 내용 길이만큼 확장 */
+  .valuebox {
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+  
